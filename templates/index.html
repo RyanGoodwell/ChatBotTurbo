@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatBotTurbo 1</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>ChatBotTurbo</h1>
+            <p>Ask me anything — and get answer</p>
+        </div>
+
+        <div id="chat-box" class="chat-box"></div>
+
+        <div class="chat-input">
+            <input type="text" id="query" placeholder="What do you want to know?" onkeydown="handleKey(event)">
+            <button onclick="sendQuery()">▶</button>
+        </div>
+    </div>
+
+    <script>
+        function appendMessage(sender, text) {
+            const chatBox = document.getElementById("chat-box");
+            const message = document.createElement("div");
+            message.className = `message ${sender}`;
+            message.innerHTML = text;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (sender === "bot") speak(text);
+        }
+
+        async function sendQuery() {
+            const input = document.getElementById("query");
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage("user", text);
+            input.value = "";
+
+            appendMessage("bot", "<em>ChatBotTurbo is thinking...</em>");
+
+            const res = await fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: text })
+            });
+
+            const data = await res.json();
+
+            const chatBox = document.getElementById("chat-box");
+            chatBox.lastChild.innerHTML = data.response;
+        }
+
+        function handleKey(event) {
+            if (event.key === "Enter") sendQuery();
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text.replace(/<[^>]*>?/gm, ''));
+            utterance.lang = "en-US";
+            speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
